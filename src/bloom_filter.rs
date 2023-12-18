@@ -17,6 +17,7 @@ impl BloomFilter {
         let mut hash_int: u128 = 0;
 
         // hashing lib returns array of bytes, convert into number
+        // slicing of first 128 bits is often more than enough to ensure uniformity
         for i in 0..16 {
             hash_int = (hash_int << 8) + hash[i] as u128;
         }
@@ -71,8 +72,6 @@ impl BloomFilter {
 
     pub fn get(&self, val: &str) -> bool {
         let buckets = self.get_buckets(val);
-
-        // println!("{:?}", buckets);
 
         let mut exists = true;
 

@@ -1,76 +1,53 @@
-use sha2::{Sha256, Digest};
+use std::result;
 
-struct BloomFilter {
-    bitset: u8,
-    // size: u32
-}
+use rand::distributions::{Alphanumeric, DistString};
+use rand::{thread_rng, Rng};
+use std::mem;
 
-impl BloomFilter {
-    fn get_bucket(val: &str) -> u8 {
-        let mut hasher = Sha256::new();
-        hasher.update(val);
-        let hash = hasher.finalize();
+pub mod bloom_filter;
 
-        let mut hash_int: u128 = 0;
-
-        for i in 0..16 {
-            hash_int = (hash_int << 8) + hash[i] as u128;
-        }
-
-        let bucket = hash_int % 8;
-
-        return bucket as u8;
-    }
-
-    fn new() -> Self {
-        BloomFilter {
-            bitset: 0
-        }
-    }
-
-    fn set(&mut self, val: &str) {
-        let bucket = BloomFilter::get_bucket(val);
-
-        // getting the right bit
-        // duplication
-        let mut mask: u8 = 1;
-
-        for i in 0..bucket {
-            mask = mask << 1;
-        }
-
-        self.bitset = self.bitset | mask;
-    }
-
-    fn get(&self, val: &str) -> bool {
-
-        let bucket = BloomFilter::get_bucket(val);
-
-        // getting the right bit
-        let mut mask: u8 = 1;
-
-        for i in 0..bucket {
-            mask = mask << 1;
-        }
-
-        // e.g. only if all same bits are set in the mask (checking), then it means value
-        // has been set
-        return (mask & self.bitset) == mask
-    }
-    // fn remove()
+fn generate_random_string(length: usize) -> String {
+    // todo - add seed
+    let string = Alphanumeric.sample_string(&mut rand::thread_rng(), length);
+    return string
 }
 
 fn main() {
     // Create a bitset. It's technically a byte array, but in which one operates with individuals bit individually
     // for now hardcoded to 8
-    let mut bitset: u8 = 0;
-
-
-    let mut bloom_filter = BloomFilter::new();
-
-    bloom_filter.set("bla_bla");
+    let mut bloom_filter = bloom_filter::BloomFilter::new();
 
     println!("{}", bloom_filter.get("bla_bla"));
     // so if it says false, then it means 100% it's not in the set. true means it might be there, but not guaranteed.
     println!("{}", bloom_filter.get("bla_bla_6"));
+
+    println!("{}", generate_random_string(64));
+
+    // set candidates
+    let mut candidates: Vec<String> = Vec::new();
+
+    const CANDIDATES: usize = 50_000;
+
+    for _ in 0..CANDIDATES {
+        candidates.push(generate_random_string(64));
+    }
+
+    // println!("mem: {:?}", mem::size_of_val(&candidates));
+
+    // half insert
+    for i in 0..CANDIDATES/2 {
+        let mut false_positives = 0;
+
+        for i in CANDIDATES/2..CANDIDATES {
+            let existance = bloom_filter.get(candidates.get(i).unwrap());
+
+            if existance {
+                false_positives += 1;
+            }
+        }
+
+        let fp_rate = false_positives as f32 / ((CANDIDATES/2) as f32) * 100.0;
+        println!("Size: {i}, FP rate: {fp_rate}%");
+        bloom_filter.set(candidates.get(i).unwrap());
+    }
 }

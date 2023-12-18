@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 sha2 = "0.10"
+shabal = "0.4"
+rand = "0.8"

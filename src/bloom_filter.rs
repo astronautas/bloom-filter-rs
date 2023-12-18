@@ -9,19 +9,24 @@ pub struct BloomFilter {
 }
 
 impl BloomFilter {
-    fn get_buckets(&self, val: &str) -> Vec<usize> {
+    fn _get_hash_slot_1(&self, val: &str) -> u128 {
         let mut hasher = Sha256::new();
         hasher.update(val);
         let hash = hasher.finalize();
 
         let mut hash_int: u128 = 0;
 
+        // hashing lib returns array of bytes, convert into number
         for i in 0..16 {
             hash_int = (hash_int << 8) + hash[i] as u128;
         }
 
-        let bucket = hash_int % 8;
+        let bucket = hash_int % self.size as u128;
 
+        return bucket;
+    }
+
+    fn _get_hash_slot_2(&self, val: &str) -> u128 {
         let mut hasher2 = Shabal192::new();
         hasher2.update(val);
         let hash2 = hasher2.finalize();
@@ -33,9 +38,16 @@ impl BloomFilter {
         }
 
         let bucket_2 = hash_int_2 % self.size as u128;
+        return bucket_2;
+    }
 
+    fn get_buckets(&self, val: &str) -> Vec<usize> {
         let mut buckets = Vec::new();
-        buckets.push(bucket as usize);
+
+        let bucket_1 = self._get_hash_slot_1(val);
+        let bucket_2 = self._get_hash_slot_2(val);
+
+        buckets.push(bucket_1 as usize);
         buckets.push(bucket_2 as usize);
 
         return buckets;
@@ -53,15 +65,6 @@ impl BloomFilter {
         let buckets = self.get_buckets(val);
 
         for bucket in buckets {
-            // getting the right bit
-            // duplication
-            // let mut mask: u8 = 1;
-
-            // for i in 0..bucket {
-            //     mask = mask << 1;
-            // }
-
-            // self.bitset = self.bitset | mask;
             self.bitset.set(bucket, true)
         }
     }
@@ -74,21 +77,9 @@ impl BloomFilter {
         let mut exists = true;
 
         for bucket in buckets {
-            // getting the right bit
-            // let mut mask: u8 = 1;
-
-            // for i in 0..bucket {
-            //     mask = mask << 1;
-            // }
-
-            // if even a single bit is not set, it means for sure the value hasn't been added and in the
-            // process hashed by bloom filter
-            // exists &= ((mask & self.bitset) == mask)
-
             exists &= self.bitset.get(bucket).as_deref().unwrap();
         }
 
         return exists;
     }
-    // fn remove()
 }

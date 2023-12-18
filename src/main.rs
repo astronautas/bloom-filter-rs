@@ -42,7 +42,7 @@ fn main() {
     // set candidates
     let mut candidates: Vec<String> = Vec::new();
 
-    const CANDIDATES: usize = 50_000;
+    const CANDIDATES: usize = 100_000;
 
     for _ in 0..CANDIDATES {
         candidates.push(generate_random_string(24));
@@ -69,7 +69,7 @@ fn main() {
     // // }
 
     // // set half, test other half
-    let mut bloom_filter = bloom_filter::BloomFilter::new(50000);
+    let mut bloom_filter = bloom_filter::BloomFilter::new(50_000);
 
     for i in 0..CANDIDATES/2 {
         bloom_filter.set(candidates.get(i).unwrap());
@@ -85,5 +85,5 @@ fn main() {
     }
 
     let fp_rate = false_positives as f32 / ((CANDIDATES/2) as f32) * 100.0;
-    println!("Size: 5000, FP rate: {fp_rate}%");
+    println!("Size: {CANDIDATES} / 2, FP rate: {fp_rate}%");
 }

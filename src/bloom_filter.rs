@@ -1,5 +1,5 @@
 use sha2::{Digest, Sha256};
-use shabal::{Shabal192, Shabal256};
+use shabal::{Shabal192};
 // use bit_set::BitSet;
 use bitvec::prelude::*;
 
